@@ -6,7 +6,7 @@ import { google } from 'googleapis';
 const OAuth2Client = new google.auth.OAuth2(
   process.env.CLIENT_ID,
   process.env.CLIENT_SECRET,
-  'https://developers.google.com/oauthplayground' // Este es el URI de redirección para obtener el token
+  'https://developers.google.com/oauthplayground'
 );
 
 OAuth2Client.setCredentials({
@@ -20,9 +20,8 @@ export async function POST(request: Request) {
     const email = data.get('email') as string;
     const phone = data.get('phone') as string;
     const position = data.get('position') as string;
-    const cvFile = data.get('cv') as File | null;
+    const cvFile = data.get('cv') as Blob | null;
 
-    // Validación de datos: si falta algo, no se procede.
     if (!name || !email || !phone || !position) {
       return NextResponse.json({ success: false, message: 'Faltan datos en el formulario.' }, { status: 400 });
     }
@@ -30,28 +29,32 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, message: 'Falta el archivo CV.' }, { status: 400 });
     }
 
-    // Obtener el token de acceso. Si esto falla, el correo no se enviará.
     const accessTokenResponse = await OAuth2Client.getAccessToken();
-    const accessToken = accessTokenResponse.token;
+    const accessToken = accessTokenResponse?.token;
+    if (!accessToken) {
+      return NextResponse.json({ success: false, message: 'No se pudo obtener token de acceso.' }, { status: 500 });
+    }
 
-    // Configuración de Nodemailer
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        type: 'OAuth2',
-        user: process.env.GMAIL_USER,
-        clientId: process.env.CLIENT_ID,
-        clientSecret: process.env.CLIENT_SECRET,
-        refreshToken: process.env.REFRESH_TOKEN,
-        accessToken: accessToken,
-      },
-    });
+   const transporter = nodemailer.createTransport({
+  host: 'smtp.gmail.com',
+  port: 465,
+  secure: true,
+  auth: {
+    type: 'OAuth2',
+    user: process.env.GMAIL_USER,
+    clientId: process.env.CLIENT_ID,
+    clientSecret: process.env.CLIENT_SECRET,
+    refreshToken: process.env.REFRESH_TOKEN,
+    accessToken: accessToken,
+  },
+});
+
 
     const fileBuffer = Buffer.from(await cvFile.arrayBuffer());
 
     const mailOptions = {
       from: `Next.js App <${process.env.GMAIL_USER}>`,
-      to: 'davidferrer1773@gmail.com', // El correo que recibirá el CV
+      to: 'davidferrer1773@gmail.com',
       subject: `Nueva Aplicación: ${name} para ${position}`,
       html: `
         <h2>Nueva Aplicación de Empleo</h2>
@@ -61,22 +64,18 @@ export async function POST(request: Request) {
         <p><strong>Puesto Solicitado:</strong> ${position}</p>
       `,
       attachments: [{
-        filename: cvFile.name,
+        filename: cvFile instanceof File ? cvFile.name : 'cv.pdf',
         content: fileBuffer,
-        contentType: cvFile.type,
+        contentType: cvFile instanceof File ? cvFile.type : 'application/pdf',
       }],
     };
 
-    // Intenta enviar el correo. Si hay un error, el 'catch' lo manejará.
-    const result = await transporter.sendMail(mailOptions);
-    console.log("Correo enviado con éxito:", result);
+    await transporter.sendMail(mailOptions);
 
-    // Si el envío fue exitoso, envía una respuesta 200 al frontend.
     return NextResponse.json({ success: true, message: 'Aplicación recibida y enviada por correo con éxito.' }, { status: 200 });
 
   } catch (error) {
-    console.error('Error en el backend al enviar el correo:', error);
-    // Si hay un error, envía una respuesta 500 al frontend.
+    console.error('Error al enviar el correo:', error);
     return NextResponse.json({ success: false, message: 'Error interno del servidor. No se pudo enviar el correo.' }, { status: 500 });
   }
 }
