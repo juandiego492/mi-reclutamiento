@@ -10,6 +10,7 @@
   "dependencies": {
     "formidable": "^3.5.1",
     "framer-motion": "^12.23.12",
+    "googleapis": "^156.0.0",
     "next": "15.4.7",
     "nodemailer": "^6.9.4",
     "react": "19.1.0",
