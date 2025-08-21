@@ -18,7 +18,6 @@ const jobs = [
   },
   {
     id: "sales-marketing-specialist",
-    id: "sales-marketing-specialist",
     title: "Sales & Marketing Specialist (Female)",
     description: "Profesional dinámica en ventas y marketing, bilingüe y creativa para campañas exitosas.",
   },
