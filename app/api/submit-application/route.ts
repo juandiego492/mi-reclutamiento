@@ -50,8 +50,12 @@ export async function POST(request: Request) {
     });
 
     return NextResponse.json({ success: true, message: "Aplicación enviada con éxito." }, { status: 200 });
-  } catch (error) {
-    console.error("Error enviando correo:", error);
-    return NextResponse.json({ success: false, message: "Error al enviar correo." }, { status: 500 });
-  }
+  } catch (error: any) {
+  console.error("Error enviando correo completo:", error);
+  return NextResponse.json({ 
+    success: false, 
+    message: error.message || "Error al enviar correo." 
+  }, { status: 500 });
+}
+
 }
