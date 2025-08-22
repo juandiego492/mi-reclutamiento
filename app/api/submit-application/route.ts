@@ -1,3 +1,4 @@
+// app/api/submit-application/route.ts
 import { NextResponse } from "next/server";
 import nodemailer from "nodemailer";
 
@@ -14,7 +15,17 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, message: "Faltan datos." }, { status: 400 });
     }
 
-    // Configurar transporte SMTP de Yandex
+    // Convertir CV a buffer
+    let attachments = [];
+    if (cvFile) {
+      const buffer = Buffer.from(await cvFile.arrayBuffer());
+      attachments.push({
+        filename: cvFile.name || "cv.pdf",
+        content: buffer,
+      });
+    }
+
+    // Configurar Nodemailer con Yandex SMTP
     const transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST,
       port: Number(process.env.SMTP_PORT),
@@ -25,19 +36,13 @@ export async function POST(request: Request) {
       },
     });
 
-    // Adjuntar CV si existe
-    const attachments = cvFile
-      ? [
-          {
-            filename: cvFile.name || "cv.pdf",
-            content: Buffer.from(await cvFile.arrayBuffer()),
-          },
-        ]
-      : [];
+    // Verificar conexión SMTP
+    await transporter.verify();
 
+    // Enviar correo
     await transporter.sendMail({
       from: `"IronVoice Careers" <${process.env.SMTP_USER}>`,
-      to: process.env.SMTP_USER, // se enviará a tu mismo correo
+      to: "f3rrer.david@yandex.com",
       subject: `Nueva Aplicación: ${name} para ${position}`,
       html: `
         <h2>Nueva Aplicación de Empleo</h2>
@@ -51,11 +56,10 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true, message: "Aplicación enviada con éxito." }, { status: 200 });
   } catch (error: any) {
-  console.error("Error enviando correo completo:", error);
-  return NextResponse.json({ 
-    success: false, 
-    message: error.message || "Error al enviar correo." 
-  }, { status: 500 });
-}
-
+    console.error("Error enviando correo completo:", error);
+    return NextResponse.json({
+      success: false,
+      message: error.message || "Error al enviar correo.",
+    }, { status: 500 });
+  }
 }
