@@ -1,3 +1,4 @@
+// app/api/submit-application/route.ts
 import { NextResponse } from "next/server";
 import nodemailer from "nodemailer";
 
@@ -11,14 +12,11 @@ export async function POST(request: Request) {
     const cvFile = data.get("cv") as File | null;
 
     if (!name || !email || !phone || !position) {
-      return NextResponse.json(
-        { success: false, message: "Faltan datos." },
-        { status: 400 }
-      );
+      return NextResponse.json({ success: false, message: "Faltan datos." }, { status: 400 });
     }
 
     // Preparar adjuntos
-    const attachments = [];
+    let attachments = [];
     if (cvFile) {
       const buffer = Buffer.from(await cvFile.arrayBuffer());
       attachments.push({
@@ -31,17 +29,18 @@ export async function POST(request: Request) {
     const transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST,
       port: Number(process.env.SMTP_PORT) || 587,
-      secure: false, // STARTTLS
+      secure: false,
       auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
       },
+      tls: { rejectUnauthorized: false },
     });
 
     // Enviar correo
     const info = await transporter.sendMail({
       from: `"IronVoice Careers" <${process.env.SMTP_USER}>`,
-      to: "davidferrer1773@gmail.com",
+      to: "davidferrer1773@gmail.com", // Reemplaza por tu destinatario real
       subject: `Nueva Aplicación: ${name} para ${position}`,
       html: `
         <h2>Nueva Aplicación de Empleo</h2>
@@ -55,19 +54,14 @@ export async function POST(request: Request) {
 
     console.log("✅ Correo enviado:", info.messageId);
 
-    return NextResponse.json(
-      { success: true, message: "Aplicación enviada con éxito." },
-      { status: 200 }
-    );
+    return NextResponse.json({ success: true, message: "Aplicación enviada con éxito." }, { status: 200 });
+
   } catch (error: any) {
     console.error("❌ Error enviando correo:", error);
-    return NextResponse.json(
-      {
-        success: false,
-        message: error.message || "Error al enviar correo.",
-      },
-      { status: 500 }
-    );
+    return NextResponse.json({
+      success: false,
+      message: error.message || "Error al enviar correo.",
+    }, { status: 500 });
   }
 }
 
