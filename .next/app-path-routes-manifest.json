@@ -1,0 +1,6 @@
+{
+  "/_not-found/page": "/_not-found",
+  "/api/submit-application/route": "/api/submit-application",
+  "/jobs/[id]/page": "/jobs/[id]",
+  "/page": "/"
+}
