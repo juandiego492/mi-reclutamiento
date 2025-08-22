@@ -1,7 +1,5 @@
 import { NextResponse } from "next/server";
-import { Resend } from "resend";
-
-const resend = new Resend(process.env.RESEND_API_KEY);
+import nodemailer from "nodemailer";
 
 export async function POST(request: Request) {
   try {
@@ -16,19 +14,30 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, message: "Faltan datos." }, { status: 400 });
     }
 
-    // Convertir archivo adjunto a base64
-    let attachments = [];
-    if (cvFile) {
-      const buffer = Buffer.from(await cvFile.arrayBuffer());
-      attachments.push({
-        filename: cvFile.name || "cv.pdf",
-        content: buffer.toString("base64"),
-      });
-    }
+    // Configurar transporte SMTP de Yandex
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: Number(process.env.SMTP_PORT),
+      secure: true, // SSL
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+      },
+    });
 
-    await resend.emails.send({
-      from: "IronVoice Careers <onboarding@resend.dev>", // remitente (usa el dominio de Resend)
-      to: "f3rrer.david@yandex.com", // nuevo correo de destino
+    // Adjuntar CV si existe
+    const attachments = cvFile
+      ? [
+          {
+            filename: cvFile.name || "cv.pdf",
+            content: Buffer.from(await cvFile.arrayBuffer()),
+          },
+        ]
+      : [];
+
+    await transporter.sendMail({
+      from: `"IronVoice Careers" <${process.env.SMTP_USER}>`,
+      to: process.env.SMTP_USER, // se enviará a tu mismo correo
       subject: `Nueva Aplicación: ${name} para ${position}`,
       html: `
         <h2>Nueva Aplicación de Empleo</h2>
