@@ -154,9 +154,94 @@ export default function JobPage() {
     });
   };
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  // Código corregido para app/jobs/[id]/page.tsx
+"use client";
+
+import { useParams } from "next/navigation";
+import Link from "next/link";
+import { useState } from "react";
+import styles from "./JobPage.module.css";
+import React from 'react';
+
+interface Job {
+  title: string;
+  description: string;
+  responsibilities: string[];
+  requirements: string[];
+  benefits: string[];
+}
+
+const jobsData: Record<string, Job> = {
+  "data-engineer": {
+    title: "Data Analyst & Engineer",
+    description:
+      "Únete a nuestro equipo de datos y transforma información en decisiones estratégicas.",
+    responsibilities: [
+      "Diseñar y mantener pipelines ETL/ELT.",
+      "Construir infraestructura de datos (cloud data warehouse, data lake).",
+      "Implementar controles de calidad y monitoreo de datos.",
+      "Analizar datos para decisiones de negocio y métricas clave.",
+      "Crear dashboards y reportes para toda la empresa.",
+    ],
+    requirements: [
+      "3+ años de experiencia en roles de datos.",
+      "SQL avanzado, Python y cloud platforms (AWS/GCP/Azure).",
+      "Experiencia en BI tools (Tableau, Power BI, Looker).",
+      "Comunicación efectiva entre técnico y negocio.",
+    ],
+    benefits: ["Crecimiento profesional", "Proyectos desafiantes", "Ambiente dinámico"],
+  },
+  // ... el resto de los trabajos queda igual
+};
+
+export default function JobPage() {
+  const params = useParams();
+  const jobId = Array.isArray(params.id) ? params.id[0] : params.id;
+  const job = jobId ? jobsData[jobId] : undefined;
+
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    cv: null as File | null,
+  });
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value, files } = e.target;
+    setFormData({
+      ...formData,
+      [name]: files ? files[0] : value,
+    });
+  };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    alert("✅ Tu aplicación ha sido enviada con éxito!");
+    if (!job) return;
+
+    const dataToSend = new FormData();
+    dataToSend.append('name', formData.name);
+    dataToSend.append('email', formData.email);
+    dataToSend.append('phone', formData.phone);
+    dataToSend.append('position', job.title); // ✅ enviar el puesto real
+    if (formData.cv) dataToSend.append('cv', formData.cv); // ✅ adjuntar CV si existe
+
+    try {
+      const response = await fetch('/api/submit-application', {
+        method: 'POST',
+        body: dataToSend,
+      });
+
+      if (response.ok) {
+        alert("✅ Tu aplicación ha sido enviada con éxito!");
+        setFormData({ name: "", email: "", phone: "", cv: null });
+      } else {
+        const errorData = await response.json();
+        alert(`❌ Error al enviar la aplicación: ${errorData.message}`);
+      }
+    } catch (error) {
+      console.error("Error de red:", error);
+      alert("❌ Error de red: No se pudo conectar con el servidor.");
+    }
   };
 
   if (!job) {
