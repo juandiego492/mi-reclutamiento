@@ -1,81 +1,49 @@
-// app/api/submit-application/route.ts
-import { NextResponse } from 'next/server';
-import nodemailer from 'nodemailer';
-import { google } from 'googleapis';
+import { NextResponse } from "next/server";
+import { Resend } from "resend";
 
-const OAuth2Client = new google.auth.OAuth2(
-  process.env.CLIENT_ID,
-  process.env.CLIENT_SECRET,
-  'https://developers.google.com/oauthplayground'
-);
-
-OAuth2Client.setCredentials({
-  refresh_token: process.env.REFRESH_TOKEN,
-});
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(request: Request) {
   try {
     const data = await request.formData();
-    const name = data.get('name') as string;
-    const email = data.get('email') as string;
-    const phone = data.get('phone') as string;
-    const position = data.get('position') as string;
-    const cvFile = data.get('cv') as Blob | null;
+    const name = data.get("name") as string;
+    const email = data.get("email") as string;
+    const phone = data.get("phone") as string;
+    const position = data.get("position") as string;
+    const cvFile = data.get("cv") as File | null;
 
     if (!name || !email || !phone || !position) {
-      return NextResponse.json({ success: false, message: 'Faltan datos en el formulario.' }, { status: 400 });
-    }
-    if (!cvFile) {
-      return NextResponse.json({ success: false, message: 'Falta el archivo CV.' }, { status: 400 });
+      return NextResponse.json({ success: false, message: "Faltan datos." }, { status: 400 });
     }
 
-    const accessTokenResponse = await OAuth2Client.getAccessToken();
-    const accessToken = accessTokenResponse?.token;
-    if (!accessToken) {
-      return NextResponse.json({ success: false, message: 'No se pudo obtener token de acceso.' }, { status: 500 });
+    // Si hay archivo adjunto, lo convertimos a base64
+    let attachments = [];
+    if (cvFile) {
+      const buffer = Buffer.from(await cvFile.arrayBuffer());
+      attachments.push({
+        filename: cvFile.name || "cv.pdf",
+        content: buffer.toString("base64"),
+      });
     }
 
-   const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
-  port: 465,
-  secure: true,
-  auth: {
-    type: 'OAuth2',
-    user: process.env.GMAIL_USER,
-    clientId: process.env.CLIENT_ID,
-    clientSecret: process.env.CLIENT_SECRET,
-    refreshToken: process.env.REFRESH_TOKEN,
-    accessToken: accessToken,
-  },
-});
-
-
-    const fileBuffer = Buffer.from(await cvFile.arrayBuffer());
-
-    const mailOptions = {
-      from: `Next.js App <${process.env.GMAIL_USER}>`,
-      to: 'davidferrer1773@gmail.com',
+    await resend.emails.send({
+      from: "IronVoice Careers <onboarding@resend.dev>", // remitente (usa el dominio de Resend)
+      to: "davidferrer1773@gmail.com", // tu correo
       subject: `Nueva Aplicación: ${name} para ${position}`,
       html: `
         <h2>Nueva Aplicación de Empleo</h2>
         <p><strong>Nombre:</strong> ${name}</p>
-        <p><strong>Correo Electrónico:</strong> ${email}</p>
+        <p><strong>Email:</strong> ${email}</p>
         <p><strong>Teléfono:</strong> ${phone}</p>
         <p><strong>Puesto Solicitado:</strong> ${position}</p>
       `,
-      attachments: [{
-        filename: cvFile instanceof File ? cvFile.name : 'cv.pdf',
-        content: fileBuffer,
-        contentType: cvFile instanceof File ? cvFile.type : 'application/pdf',
-      }],
-    };
+      attachments,
+    });
 
-    await transporter.sendMail(mailOptions);
-
-    return NextResponse.json({ success: true, message: 'Aplicación recibida y enviada por correo con éxito.' }, { status: 200 });
-
+    return NextResponse.json({ success: true, message: "Aplicación enviada con éxito." }, { status: 200 });
   } catch (error) {
-    console.error('Error al enviar el correo:', error);
-    return NextResponse.json({ success: false, message: 'Error interno del servidor. No se pudo enviar el correo.' }, { status: 500 });
+    console.error("Error enviando correo:", error);
+    return NextResponse.json({ success: false, message: "Error al enviar correo." }, { status: 500 });
   }
 }
+
