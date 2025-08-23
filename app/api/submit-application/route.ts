@@ -2,67 +2,39 @@
 import { NextResponse } from "next/server";
 import nodemailer from "nodemailer";
 
-export async function POST(request: Request) {
+export async function POST(req: Request) {
   try {
-    const data = await request.formData();
-    const name = data.get("name") as string;
-    const email = data.get("email") as string;
-    const phone = data.get("phone") as string;
-    const position = data.get("position") as string;
-    const cvFile = data.get("cv") as File | null;
+    const body = await req.json();
 
-    if (!name || !email || !phone || !position) {
-      return NextResponse.json({ success: false, message: "Faltan datos." }, { status: 400 });
-    }
-
-    // Preparar adjuntos
-    let attachments = [];
-    if (cvFile) {
-      const buffer = Buffer.from(await cvFile.arrayBuffer());
-      attachments.push({
-        filename: cvFile.name || "cv.pdf",
-        content: buffer,
-      });
-    }
-
-    // Configuración SMTP con Brevo
+    // ⚡ Configurar transporte SMTP de Brevo
     const transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: Number(process.env.SMTP_PORT) || 587,
+      host: "smtp-relay.brevo.com",
+      port: 587,
       secure: false,
       auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
+        user: "95683d001@smtp-brevo.com", // tu login de SMTP (no el from)
+        pass: process.env.BREVO_SMTP_KEY, // tu contraseña SMTP de Brevo
       },
-      tls: { rejectUnauthorized: false },
     });
 
-    // Enviar correo
-    const info = await transporter.sendMail({
-      from: `"IronVoice Careers" <${process.env.SMTP_USER}>`,
-      to: "davidferrer1773@gmail.com", // Reemplaza por tu destinatario real
-      subject: `Nueva Aplicación: ${name} para ${position}`,
+    // ⚡ Enviar correo
+    await transporter.sendMail({
+      from: '"Iron Voice Solutions" <davidferrer1773@gmail.com>', // remitente verificado en Brevo
+      to: "davidferrer1773@gmail.com",
+      subject: "Nueva aplicación recibida",
       html: `
-        <h2>Nueva Aplicación de Empleo</h2>
-        <p><strong>Nombre:</strong> ${name}</p>
-        <p><strong>Email:</strong> ${email}</p>
-        <p><strong>Teléfono:</strong> ${phone}</p>
-        <p><strong>Puesto Solicitado:</strong> ${position}</p>
+        <h2>Nueva aplicación</h2>
+        <p><b>Nombre:</b> ${body.name}</p>
+        <p><b>Email:</b> ${body.email}</p>
+        <p><b>Teléfono:</b> ${body.phone}</p>
+        <p><b>Mensaje:</b> ${body.message}</p>
       `,
-      attachments,
     });
 
-    console.log("✅ Correo enviado:", info.messageId);
-
-    return NextResponse.json({ success: true, message: "Aplicación enviada con éxito." }, { status: 200 });
-
+    return NextResponse.json({ message: "✅ Tu aplicación ha sido enviada con éxito!" });
   } catch (error: any) {
-    console.error("❌ Error enviando correo:", error);
-    return NextResponse.json({
-      success: false,
-      message: error.message || "Error al enviar correo.",
-    }, { status: 500 });
+    console.error("Error al enviar correo:", error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
-
 
