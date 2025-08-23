@@ -256,4 +256,4 @@ export default function JobPage() {
         <Link href="/">
           <button>Volver al Inicio</button>
         </Link>
-      </div
+      </div>
