@@ -109,3 +109,14 @@ export default function HomePage() {
     </div>
   );
 }
+ return (
+    <div className={styles.container}>
+      {/* ... todo tu contenido ... */}
+
+      <div className={styles.centerButton}>
+        <Link href="/">
+          <button>Volver al Inicio</button>
+        </Link>
+      </div>
+    </div>
+  );
