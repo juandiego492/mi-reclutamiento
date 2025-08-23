@@ -4,7 +4,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { useState } from "react";
 import styles from "./JobPage.module.css";
-import React from "react";
+import React from 'react';
 
 interface Job {
   title: string;
@@ -17,7 +17,8 @@ interface Job {
 const jobsData: Record<string, Job> = {
   "data-engineer": {
     title: "Data Analyst & Engineer",
-    description: "Únete a nuestro equipo de datos y transforma información en decisiones estratégicas.",
+    description:
+      "Únete a nuestro equipo de datos y transforma información en decisiones estratégicas.",
     responsibilities: [
       "Diseñar y mantener pipelines ETL/ELT.",
       "Construir infraestructura de datos (cloud data warehouse, data lake).",
@@ -35,7 +36,8 @@ const jobsData: Record<string, Job> = {
   },
   "sales-marketing-specialist": {
     title: "Sales and Marketing Specialist (Female)",
-    description: "Participa en nuestras campañas y gestión de clientes, aportando creatividad y estrategia.",
+    description:
+      "Participa en nuestras campañas y gestión de clientes, aportando creatividad y estrategia.",
     responsibilities: [
       "Gestionar comunicación inbound y outbound.",
       "Redacción de contenido para blogs y campañas.",
@@ -53,7 +55,8 @@ const jobsData: Record<string, Job> = {
   },
   "website-specialist": {
     title: "Website Specialist",
-    description: "Apoya la configuración y optimización de cursos y membresías en plataformas digitales.",
+    description:
+      "Apoya la configuración y optimización de cursos y membresías en plataformas digitales.",
     responsibilities: [
       "Subir y organizar cursos en System.io",
       "Configurar funnels de marketing y CRM",
@@ -144,35 +147,36 @@ export default function JobPage() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, files } = e.target;
-    setFormData({
-      ...formData,
+    setFormData((prev) => ({
+      ...prev,
       [name]: files ? files[0] : value,
-    });
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!job) return;
 
-    const dataToSend = new FormData();
-    dataToSend.append("name", formData.name);
-    dataToSend.append("email", formData.email);
-    dataToSend.append("phone", formData.phone);
-    dataToSend.append("position", job.title);
-    if (formData.cv) dataToSend.append("cv", formData.cv);
-
     try {
+      const dataToSend = new FormData();
+      dataToSend.append("name", formData.name);
+      dataToSend.append("email", formData.email);
+      dataToSend.append("phone", formData.phone);
+      dataToSend.append("position", job.title);
+      if (formData.cv) dataToSend.append("cv", formData.cv);
+
       const response = await fetch("/api/submit-application", {
         method: "POST",
         body: dataToSend,
       });
 
+      const result = await response.json();
+
       if (response.ok) {
-        alert("✅ Tu aplicación ha sido enviada con éxito!");
+        alert(result.message || "✅ Tu aplicación ha sido enviada con éxito!");
         setFormData({ name: "", email: "", phone: "", cv: null });
       } else {
-        const errorData = await response.json();
-        alert(`❌ Error al enviar la aplicación: ${errorData.message}`);
+        alert(result.error || "❌ Error al enviar la aplicación");
       }
     } catch (error) {
       console.error("Error de red:", error);
@@ -252,7 +256,4 @@ export default function JobPage() {
         <Link href="/">
           <button>Volver al Inicio</button>
         </Link>
-      </div>
-    </div>
-  );
-}
+      </div
