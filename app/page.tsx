@@ -17,8 +17,7 @@ interface Job {
 const jobsData: Record<string, Job> = {
   "data-engineer": {
     title: "Data Analyst & Engineer",
-    description:
-      "Únete a nuestro equipo de datos y transforma información en decisiones estratégicas.",
+    description: "Únete a nuestro equipo de datos y transforma información en decisiones estratégicas.",
     responsibilities: [
       "Diseñar y mantener pipelines ETL/ELT.",
       "Construir infraestructura de datos (cloud data warehouse, data lake).",
@@ -36,8 +35,7 @@ const jobsData: Record<string, Job> = {
   },
   "sales-marketing-specialist": {
     title: "Sales and Marketing Specialist (Female)",
-    description:
-      "Participa en nuestras campañas y gestión de clientes, aportando creatividad y estrategia.",
+    description: "Participa en nuestras campañas y gestión de clientes, aportando creatividad y estrategia.",
     responsibilities: [
       "Gestionar comunicación inbound y outbound.",
       "Redacción de contenido para blogs y campañas.",
@@ -55,8 +53,7 @@ const jobsData: Record<string, Job> = {
   },
   "website-specialist": {
     title: "Website Specialist",
-    description:
-      "Apoya la configuración y optimización de cursos y membresías en plataformas digitales.",
+    description: "Apoya la configuración y optimización de cursos y membresías en plataformas digitales.",
     responsibilities: [
       "Subir y organizar cursos en System.io",
       "Configurar funnels de marketing y CRM",
@@ -244,27 +241,9 @@ export default function JobPage() {
       <section id="apply">
         <h2 style={{ textAlign: "center", marginBottom: "1rem" }}>Aplica Ahora</h2>
         <form className={styles.form} onSubmit={handleSubmit}>
-          <input
-            type="text"
-            name="name"
-            placeholder="Nombre Completo"
-            onChange={handleChange}
-            required
-          />
-          <input
-            type="email"
-            name="email"
-            placeholder="Correo Electrónico"
-            onChange={handleChange}
-            required
-          />
-          <input
-            type="tel"
-            name="phone"
-            placeholder="Teléfono"
-            onChange={handleChange}
-            required
-          />
+          <input type="text" name="name" placeholder="Nombre Completo" onChange={handleChange} required />
+          <input type="email" name="email" placeholder="Correo Electrónico" onChange={handleChange} required />
+          <input type="tel" name="phone" placeholder="Teléfono" onChange={handleChange} required />
           <input type="file" name="cv" onChange={handleChange} />
           <button type="submit">Enviar Aplicación</button>
         </form>
@@ -278,3 +257,4 @@ export default function JobPage() {
     </div>
   );
 }
+
