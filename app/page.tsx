@@ -131,9 +131,9 @@ const jobsData: Record<string, Job> = {
 };
 
 export default function JobPage() {
-  const params = useParams();
-  const jobId = Array.isArray(params.id) ? params.id[0] : params.id;
-  const job = jobId ? jobsData[jobId] : undefined;
+const params = useParams<{ id: string }>();
+const jobId = params.id; // siempre será string
+const job = jobsData[jobId];
 
   const [formData, setFormData] = useState({
     name: "",
