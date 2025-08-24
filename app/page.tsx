@@ -131,9 +131,9 @@ const jobsData: Record<string, Job> = {
 };
 
 export default function JobPage() {
-const params = useParams<{ id: string }>();
-const jobId = params.id; // siempre será string
-const job = jobsData[jobId];
+  const params = useParams<{ id: string }>();
+  const jobId = params.id;
+  const job = jobsData[jobId];
 
   const [formData, setFormData] = useState({
     name: "",
@@ -248,12 +248,6 @@ const job = jobsData[jobId];
           <button type="submit">Enviar Aplicación</button>
         </form>
       </section>
-
-      <div className={styles.centerButton}>
-        <Link href="/">
-          <button>Volver al Inicio</button>
-        </Link>
-      </div>
     </div>
   );
 }
