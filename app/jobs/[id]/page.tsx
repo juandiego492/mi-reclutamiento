@@ -252,8 +252,11 @@ export default function JobPage() {
         </form>
       </section>
 
-      <div className={styles.centerButton}>
+       <div className={styles.centerButton}>
         <Link href="/">
           <button>Volver al Inicio</button>
         </Link>
       </div>
+    </div>
+  );
+}
